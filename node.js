@@ -30,7 +30,6 @@ if (cluster.isMaster) {
     const serverAdapter = new ExpressAdapter();
     serverAdapter.setBasePath('/admin/queues');
 
-
     let folder = `${__dirname}/converted`;
     const mp3Queue = new Queue('convert-mp3', 'redis://127.0.0.1:6379');
 
@@ -109,7 +108,7 @@ if (cluster.isMaster) {
     });
 
     const app = express()
-    const port = 3000
+    const port = 3003
 
     app.use(cors())
 

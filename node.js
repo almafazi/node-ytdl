@@ -132,7 +132,7 @@ if (cluster.isMaster) {
             });
 
             if( mp3 && jpg ) {
-                var fullUrl = req.protocol + '://' + req.get('host');
+                var fullUrl = req.protocol + 's://' + req.get('host');
 
                 const absolutePath = `${fullUrl}/download?path=${base64encode(id+'/'+mp3)}`;
                 res.send({

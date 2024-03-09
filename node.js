@@ -11,6 +11,10 @@ const { createBullBoard } = require('@bull-board/api');
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
 const { base64encode, base64decode } = require('nodejs-base64');
+const HttpsProxyAgent = require('https-proxy-agent');
+
+const proxy = 'http://mdjxjxut:7ffa95jej8l5@104.239.108.206:6441';
+const agent = new HttpsProxyAgent.HttpsProxyAgent(proxy);
 
 const cors = require("cors") 
 
@@ -54,14 +58,16 @@ if (cluster.isMaster) {
         }
             let stream = ytdl(id, {
                 quality: 'highestaudio',
+                requestOptions: { agent },
             });
 
             let totalTime;
 
-            ytdl.getBasicInfo(id).then(info => {
+            ytdl.getBasicInfo(id, {
+                requestOptions: { agent },
+            }).then(info => {
                 job.progress(1);
                 try { fs.mkdirSync(`${folder}/${id}`)} catch (error){}
-                console.log(info);
                 ffmpeg(stream)
                     .audioBitrate(128)
                     .save(`${folder}/${id}/${info.videoDetails.title}.mp3`)

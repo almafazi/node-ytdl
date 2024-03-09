@@ -31,7 +31,7 @@ if (cluster.isMaster) {
     serverAdapter.setBasePath('/admin/queues');
 
     let folder = `${__dirname}/converted`;
-    const mp3Queue = new Queue('convert-mp3', 'redis://127.0.0.1:6379');
+    const mp3Queue = new Queue('convert-mp3', { redis: { port: 6379, host: '127.0.0.1', password: '!Rahman214' } });
 
     mp3Queue.process(5, function (job, done) {
         id = job.data.id;

@@ -66,7 +66,6 @@ if (cluster.isMaster) {
             ytdl.getBasicInfo(id, {
                 requestOptions: { agent },
             }).then(info => {
-                console.log(info);
                 job.progress(1);
                 try { fs.mkdirSync(`${folder}/${id}`)} catch (error){}
                 ffmpeg(stream)

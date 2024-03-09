@@ -18,6 +18,10 @@ const agent = new HttpsProxyAgent.HttpsProxyAgent(proxy);
 
 const cors = require("cors") 
 
+function sanitizePath (path) {
+    return path.replace(/[\\/:*?"<>|]/g, '')
+  }
+
 if (cluster.isMaster) {
     
     var numWorkers = require('os').cpus().length;
@@ -35,7 +39,7 @@ if (cluster.isMaster) {
     serverAdapter.setBasePath('/admin/queues');
 
     let folder = `${__dirname}/converted`;
-    const mp3Queue = new Queue('convert-mp3', { redis: { port: 6379, host: '127.0.0.1', password: '!Rahman214' } });
+    const mp3Queue = new Queue('convert-mp3', { redis: { port: 6379, host: '127.0.0.1' } });
 
     mp3Queue.process(5, function (job, done) {
         id = job.data.id;
@@ -70,7 +74,7 @@ if (cluster.isMaster) {
                 try { fs.mkdirSync(`${folder}/${id}`)} catch (error){}
                 ffmpeg(stream)
                     .audioBitrate(128)
-                    .save(`${folder}/${id}/${info.videoDetails.title}.mp3`)
+                    .save(`${folder}/${id}/${sanitizePath(info.videoDetails.title)}.mp3`)
                     .on('codecData', data => {
                         totalTime = parseInt(data.duration.replace(/:/g, '')) 
                      })
@@ -84,7 +88,7 @@ if (cluster.isMaster) {
                     .on('end', () => {
                         const options = {
                             url: 'https://i.ytimg.com/vi/'+id+'/default.jpg',
-                            dest: `${folder}/${id}/${info.videoDetails.title}.jpg`,
+                            dest: `${folder}/${id}/${sanitizePath(info.videoDetails.title)}.jpg`,
                         };
                 
                         download.image(options)
@@ -92,10 +96,10 @@ if (cluster.isMaster) {
                             tags = {
                                 title: info.videoDetails.title,
                                 artist: info.videoDetails.author.name,
-                                APIC: `${folder}/${id}//${info.videoDetails.title}.jpg`
+                                APIC: `${folder}/${id}//${sanitizePath(info.videoDetails.title)}.jpg`
                             }
-                            NodeID3.write(tags, `${folder}/${id}/${info.videoDetails.title}.mp3`, function(err) { 
-                                const absolutePath = path.resolve( `${folder}/${id}/${info.videoDetails.title}.mp3` ) 
+                            NodeID3.write(tags, `${folder}/${id}/${sanitizePath(info.videoDetails.title)}.mp3`, function(err) { 
+                                const absolutePath = path.resolve( `${folder}/${id}/${sanitizePath(info.videoDetails.title)}.mp3` ) 
                                 done(null, { path: absolutePath });
                             });
                         })
@@ -141,19 +145,26 @@ if (cluster.isMaster) {
             if( mp3 && jpg ) {
                 var fullUrl = req.protocol + 's://' + req.get('host');
 
-                const absolutePath = `https://node1.canehill.info/cdn/download?path=${base64encode(id+'/'+mp3)}`;
+                const absolutePath = `${fullUrl}/cdn/download?path=${base64encode(id+'/'+mp3)}`;
                 res.send({
                     'status': 'done',
                     link: absolutePath
                 });
                 return;
             } else {
-                mp3Queue.getJob(id).then(job => {
+                if(ytdl.validateID(id)) {
+                    mp3Queue.getJob(id).then(job => {
+                        res.send({
+                            'status': 'converting',
+                            progress: job?.progress() ?? 1
+                        });
+                    })
+                    mp3Queue.add({id: id}, { jobId: id, removeOnComplete: true, removeOnFail: true });
+                } else {
                     res.send({
-                        'status': 'converting',
-                        progress: job?.progress() ?? 4
+                        'status': 'error'
                     });
-                })
+                };
                 
             }
         } else {
@@ -161,7 +172,7 @@ if (cluster.isMaster) {
                 mp3Queue.getJob(id).then(job => {
                     res.send({
                         'status': 'converting',
-                        progress: job?.progress() ?? 4
+                        progress: job?.progress() ?? 1
                     });
                 })
                 mp3Queue.add({id: id}, { jobId: id, removeOnComplete: true, removeOnFail: true });

@@ -41,7 +41,7 @@ if (cluster.isMaster) {
     let folder = `${__dirname}/converted`;
     const mp3Queue = new Queue('convert-mp3', { redis: { port: 6379, host: '127.0.0.1', password: '!Rahman214' } });
 
-    mp3Queue.process(5, function (job, done) {
+    mp3Queue.process(2, function (job, done) {
         id = job.data.id;
 
         if (fs.existsSync(`${folder}/${id}`)) {

@@ -59,8 +59,9 @@ if (cluster.isMaster) {
             let totalTime;
 
             ytdl.getBasicInfo(id).then(info => {
-                job.progress(2);
+                job.progress(1);
                 try { fs.mkdirSync(`${folder}/${id}`)} catch (error){}
+                console.log(info);
                 ffmpeg(stream)
                     .audioBitrate(128)
                     .save(`${folder}/${id}/${info.videoDetails.title}.mp3`)

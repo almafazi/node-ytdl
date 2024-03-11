@@ -62,13 +62,13 @@ if (cluster.isMaster) {
         }
             let stream = ytdl(id, {
                 quality: 'highestaudio',
-                requestOptions: { agent },
+                // requestOptions: { agent },
             });
 
             let totalTime;
 
             ytdl.getBasicInfo(id, {
-                requestOptions: { agent },
+                // requestOptions: { agent },
             }).then(info => {
                 job.progress(1);
                 try { fs.mkdirSync(`${folder}/${id}`)} catch (error){}
